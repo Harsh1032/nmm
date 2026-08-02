@@ -5,16 +5,8 @@ import {
   type CaseNoteState,
 } from "@/app/(authenticated)/records/actions";
 import type { CaseNote } from "@/data/profile";
-import {
-  CheckCircle2,
-  FileText,
-  Info,
-} from "lucide-react";
-import {
-  useActionState,
-  useEffect,
-  useRef,
-} from "react";
+import { CheckCircle2, FileText, Info } from "lucide-react";
+import { useActionState, useEffect, useRef } from "react";
 
 type CaseNotesProps = {
   recordId?: string;
@@ -29,11 +21,12 @@ export default function CaseNotes({
   migrationCode,
   notes,
 }: CaseNotesProps) {
-  const [state, formAction, pending] =
-    useActionState(addCaseNote, initialState);
+  const [state, formAction, pending] = useActionState(
+    addCaseNote,
+    initialState,
+  );
 
-  const formRef =
-    useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state.success) {
@@ -68,9 +61,7 @@ export default function CaseNotes({
                 {note.author}
               </p>
 
-              <time className="text-[9px] text-[#667085]">
-                {note.date}
-              </time>
+              <time className="text-[9px] text-[#667085]">{note.date}</time>
             </div>
 
             <p className="mt-3 whitespace-pre-wrap text-[11px] leading-5 text-[#475467]">
@@ -81,65 +72,53 @@ export default function CaseNotes({
       </div>
 
       {recordId && migrationCode && (
-  <form
-    ref={formRef}
-    action={formAction}
-    className="mt-6"
-  >
-    <input
-      type="hidden"
-      name="migrationRecordId"
-      value={recordId}
-    />
+        <form ref={formRef} action={formAction} className="mt-6">
+          <input type="hidden" name="migrationRecordId" value={recordId} />
 
-    <input
-      type="hidden"
-      name="migrationCode"
-      value={migrationCode}
-    />
+          <input type="hidden" name="migrationCode" value={migrationCode} />
 
-    <label
-      htmlFor="case-note"
-      className="text-[9px] font-bold uppercase text-[#667085]"
-    >
-      Add New Case Note
-    </label>
+          <label
+            htmlFor="case-note"
+            className="text-[9px] font-bold uppercase text-[#667085]"
+          >
+            Add New Case Note
+          </label>
 
-    <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end">
-      <textarea
-        id="case-note"
-        name="note"
-        placeholder="Enter restricted access case note here..."
-        rows={4}
-        maxLength={3000}
-        required
-        className="min-h-28 flex-1 resize-y rounded-md border border-[#d8dde5] bg-white p-4 text-sm outline-none placeholder:text-[#98a0ae] focus:border-[#202124] focus:ring-2 focus:ring-black/5"
-      />
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <textarea
+              id="case-note"
+              name="note"
+              placeholder="Enter restricted access case note here..."
+              rows={4}
+              maxLength={3000}
+              required
+              className="min-h-28 flex-1 resize-y rounded-md border border-[#d8dde5] bg-white p-4 text-sm outline-none placeholder:text-[#98a0ae] focus:border-[#202124] focus:ring-2 focus:ring-black/5"
+            />
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-11 rounded-md bg-[#181818] px-6 text-xs font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {pending ? "Saving..." : "Submit Note"}
-      </button>
-    </div>
+            <button
+              type="submit"
+              disabled={pending}
+              className="h-11 rounded-md bg-[#181818] px-6 text-xs font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {pending ? "Saving..." : "Submit Note"}
+            </button>
+          </div>
 
-    {state.error && (
-      <div className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        <Info className="mt-0.5 h-4 w-4 shrink-0" />
-        {state.error}
-      </div>
-    )}
+          {state.error && (
+            <div className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <Info className="mt-0.5 h-4 w-4 shrink-0" />
+              {state.error}
+            </div>
+          )}
 
-    {state.success && (
-      <div className="mt-3 flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-        {state.success}
-      </div>
-    )}
-  </form>
-)}
+          {state.success && (
+            <div className="mt-3 flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              {state.success}
+            </div>
+          )}
+        </form>
+      )}
     </section>
   );
 }
