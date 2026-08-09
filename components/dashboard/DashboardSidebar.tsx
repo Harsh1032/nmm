@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   X,
   FileBarChart,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -39,6 +40,11 @@ const navigation = [
     label: "Support",
     href: "/support",
     icon: Headphones,
+  },
+  {
+    label: "Applications",
+    href: "/applications",
+    icon: ClipboardList,
   },
 ];
 

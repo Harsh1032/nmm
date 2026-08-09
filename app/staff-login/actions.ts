@@ -16,7 +16,7 @@ const validRoles = [
   "ngo",
   "police",
   "employer",
-  "public",
+  "employee",
 ] as const;
 
 type LoginRole = (typeof validRoles)[number];
@@ -41,6 +41,10 @@ export async function login(
     formData.get("selectedRole") ?? ""
   );
 
+  // -------------------------------------------------------
+  // 1. Validate submitted credentials
+  // -------------------------------------------------------
+
   if (!email || !password) {
     return {
       error:
@@ -56,11 +60,17 @@ export async function login(
 
   const supabase = await createClient();
 
-  const { data: authData, error: authError } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  // -------------------------------------------------------
+  // 2. Authenticate user
+  // -------------------------------------------------------
+
+  const {
+    data: authData,
+    error: authError,
+  } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (authError || !authData.user) {
     return {
@@ -69,25 +79,34 @@ export async function login(
     };
   }
 
-  const { data: profile, error: profileError } =
-    await supabase
-      .from("profiles")
-      .select(`
-        id,
-        full_name,
-        role,
-        active,
-        ministry
-      `)
-      .eq("id", authData.user.id)
-      .single();
+  // -------------------------------------------------------
+  // 3. Get real application role from profiles table
+  // -------------------------------------------------------
+
+  const {
+    data: profile,
+    error: profileError,
+  } = await supabase
+    .from("profiles")
+    .select(`
+      id,
+      full_name,
+      role,
+      active,
+      ministry,
+      clearance_level,
+      department,
+      organization_name
+    `)
+    .eq("id", authData.user.id)
+    .single();
 
   if (profileError || !profile) {
     await supabase.auth.signOut();
 
     return {
       error:
-        "No authorized government profile is assigned to this account.",
+        "No authorized profile is assigned to this account.",
     };
   }
 
@@ -95,21 +114,14 @@ export async function login(
     await supabase.auth.signOut();
 
     return {
-      error: "This government account has been suspended.",
+      error: "This account has been suspended.",
     };
   }
 
-  // For now, only Ministry accounts exist in the demo.
-  if (profile.role !== "ministry") {
-    await supabase.auth.signOut();
+  // -------------------------------------------------------
+  // 4. Selected card must match assigned role
+  // -------------------------------------------------------
 
-    return {
-      error:
-        "This account is not authorized for the current demo portal.",
-    };
-  }
-
-  // Compare selected role with the real profile role.
   if (selectedRoleValue !== profile.role) {
     await supabase.auth.signOut();
 
@@ -119,5 +131,36 @@ export async function login(
     };
   }
 
-  redirect("/dashboard");
+  // -------------------------------------------------------
+  // 5. Redirect according to role
+  // -------------------------------------------------------
+
+  switch (profile.role) {
+    case "ministry":
+      redirect("/dashboard");
+
+    case "admin":
+      redirect("/technical/dashboard");
+
+    case "police":
+    case "agency":
+      redirect("/agency/dashboard");
+
+    case "employer":
+      redirect("/employer/dashboard");
+
+    case "employee":
+      redirect("/employee/dashboard");
+
+    case "ngo":
+      redirect("/ngo/dashboard");
+
+    default:
+      await supabase.auth.signOut();
+
+      return {
+        error:
+          "No portal is configured for this account.",
+      };
+  }
 }

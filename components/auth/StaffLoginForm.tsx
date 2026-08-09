@@ -19,6 +19,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 type RoleId =
@@ -28,7 +29,7 @@ type RoleId =
   | "ngo"
   | "police"
   | "employer"
-  | "public";
+  | "employee";
 
 type PortalRole = {
   id: RoleId;
@@ -75,9 +76,9 @@ const roles: PortalRole[] = [
     icon: BriefcaseBusiness,
   },
   {
-    id: "public",
-    name: "Citizen / Public",
-    description: "Resource access & personal inquiries",
+    id: "employee",
+    name: "Employee / Individual",
+    description: "Personal migration, employment & support services",
     icon: IdCard,
   },
 ];
@@ -85,15 +86,11 @@ const roles: PortalRole[] = [
 const initialState: LoginState = {};
 
 export default function StaffLoginForm() {
-  const [selectedRole, setSelectedRole] =
-    useState<RoleId>("ministry");
+  const [selectedRole, setSelectedRole] = useState<RoleId>("ministry");
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const [state, formAction, pending] = useActionState(
-    login,
-    initialState
-  );
+  const [state, formAction, pending] = useActionState(login, initialState);
 
   return (
     <section className="mx-auto w-full max-w-167.5 overflow-hidden rounded-xl border border-black/10 bg-white shadow-[0_12px_35px_rgba(16,24,40,0.08)] lg:mx-0">
@@ -116,11 +113,7 @@ export default function StaffLoginForm() {
       </div>
 
       <form action={formAction}>
-        <input
-          type="hidden"
-          name="selectedRole"
-          value={selectedRole}
-        />
+        <input type="hidden" name="selectedRole" value={selectedRole} />
 
         <div className="px-6 py-7 sm:px-8">
           <fieldset>
@@ -188,7 +181,7 @@ export default function StaffLoginForm() {
             <label className="block">
               <span className="flex items-center gap-2 text-sm font-medium text-[#202124]">
                 <UserRound className="h-4 w-4 text-[#667085]" />
-                Government ID / Email
+                Account ID / Email
               </span>
 
               <input
@@ -219,14 +212,8 @@ export default function StaffLoginForm() {
 
                 <button
                   type="button"
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                  onClick={() =>
-                    setShowPassword((current) => !current)
-                  }
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((current) => !current)}
                   className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center rounded p-1 text-[#667085] hover:bg-black/5 hover:text-[#202124]"
                 >
                   {showPassword ? (
@@ -254,9 +241,7 @@ export default function StaffLoginForm() {
             disabled={pending}
             className="mt-7 flex min-h-12 w-full items-center justify-center gap-3 rounded-md bg-[#181818] px-5 py-3 text-base font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {pending
-              ? "Authenticating..."
-              : "Authenticate & Enter System"}
+            {pending ? "Authenticating..." : "Authenticate & Enter System"}
 
             {!pending && <ArrowRight className="h-5 w-5" />}
           </button>
@@ -269,6 +254,16 @@ export default function StaffLoginForm() {
             <Fingerprint className="h-5 w-5" />
             Continue with Gov-ID Single Sign-On
           </button>
+
+          <p className="mt-5 text-center text-sm text-[#667085]">
+            Employer or individual without an account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-[#202124] hover:underline"
+            >
+              Register here
+            </Link>
+          </p>
         </div>
       </form>
     </section>

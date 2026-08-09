@@ -1,16 +1,18 @@
-// src/app/(authenticated)/layout.tsx
-
-import DashboardShell from "@/components/dashboard/DashboardShell";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+export type AppRole =
+  | "ministry"
+  | "admin"
+  | "agency"
+  | "police"
+  | "employer"
+  | "employee"
+  | "ngo";
 
-export default async function AuthenticatedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export async function requireRole(
+  allowedRoles: AppRole[]
+) {
   const supabase = await createClient();
 
   const {
@@ -34,7 +36,9 @@ export default async function AuthenticatedLayout({
       active,
       clearance_level,
       department,
-      organization_name
+      organization_name,
+      employer_id,
+      migration_record_id
     `)
     .eq("id", user.id)
     .single();
@@ -43,15 +47,14 @@ export default async function AuthenticatedLayout({
     error ||
     !profile ||
     !profile.active ||
-    profile.role !== "ministry"
+    !allowedRoles.includes(profile.role as AppRole)
   ) {
     await supabase.auth.signOut();
     redirect("/staff-login");
   }
 
-  return (
-    <DashboardShell profile={profile}>
-      {children}
-    </DashboardShell>
-  );
+  return {
+    user,
+    profile,
+  };
 }
