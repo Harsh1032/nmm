@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export type RegisterState = {
@@ -8,7 +9,9 @@ export type RegisterState = {
 };
 
 function normalizeEmail(value: FormDataEntryValue | null) {
-  return String(value ?? "").trim().toLowerCase();
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
 }
 
 export async function registerEmployer(
@@ -39,7 +42,9 @@ export async function registerEmployer(
     formData.get("representativeName") ?? ""
   ).trim();
 
-  const email = normalizeEmail(formData.get("email"));
+  const email = normalizeEmail(
+    formData.get("email")
+  );
 
   const password = String(
     formData.get("password") ?? ""
@@ -61,13 +66,31 @@ export async function registerEmployer(
 
   if (password.length < 8) {
     return {
-      error: "Password must contain at least 8 characters.",
+      error:
+        "Password must contain at least 8 characters.",
     };
   }
 
   const admin = createAdminClient();
 
-  // Create employer entity first.
+  // Check duplicate registration number
+  const { data: existingEmployer } = await admin
+    .from("employers")
+    .select("id")
+    .eq(
+      "registration_number",
+      registrationNumber
+    )
+    .maybeSingle();
+
+  if (existingEmployer) {
+    return {
+      error:
+        "An organization with this registration number already exists.",
+    };
+  }
+
+  // Create employer
   const {
     data: employer,
     error: employerError,
@@ -75,11 +98,14 @@ export async function registerEmployer(
     .from("employers")
     .insert({
       name: companyName,
-      registration_number: registrationNumber,
+      registration_number:
+        registrationNumber,
       sector,
       country,
       city: city || null,
-      compliance_status: "under_review",
+
+      // For demo, immediately usable.
+      compliance_status: "verified",
     })
     .select("id")
     .single();
@@ -92,17 +118,19 @@ export async function registerEmployer(
     };
   }
 
+  // Create Auth user
   const {
     data: userResult,
     error: userError,
-  } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: representativeName,
-    },
-  });
+  } =
+    await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: representativeName,
+      },
+    });
 
   if (userError || !userResult.user) {
     await admin
@@ -117,18 +145,19 @@ export async function registerEmployer(
     };
   }
 
+  // Update representative profile
   const { error: profileError } = await admin
     .from("profiles")
     .update({
+      email,
       full_name: representativeName,
-      title: "Authorized Employer Representative",
+      title:
+        "Authorized Employer Representative",
       ministry: null,
       role: "employer",
       clearance_level: "organization",
       organization_name: companyName,
       employer_id: employer.id,
-
-      // Demo behavior:
       active: true,
     })
     .eq("id", userResult.user.id);
@@ -149,9 +178,27 @@ export async function registerEmployer(
     };
   }
 
-  redirect(
-    "/staff-login?registered=employer"
-  );
+  // Sign in newly-created account
+  const supabase = await createClient();
+
+  const { error: signInError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+  if (signInError) {
+    console.error(
+      "Employer auto-login failed:",
+      signInError
+    );
+
+    redirect(
+      "/staff-login?registered=employer"
+    );
+  }
+
+  redirect("/employer/dashboard");
 }
 
 export async function registerIndividual(
@@ -186,7 +233,8 @@ export async function registerIndividual(
     !passportNumber
   ) {
     return {
-      error: "Complete all required fields.",
+      error:
+        "Complete all required fields.",
     };
   }
 
@@ -199,17 +247,19 @@ export async function registerIndividual(
 
   const admin = createAdminClient();
 
+  // Create Auth user
   const {
     data: userResult,
     error: userError,
-  } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: fullName,
-    },
-  });
+  } =
+    await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+      },
+    });
 
   if (userError || !userResult.user) {
     return {
@@ -219,19 +269,18 @@ export async function registerIndividual(
     };
   }
 
+  // Update profile
   const { error: profileError } = await admin
     .from("profiles")
     .update({
+      email,
       full_name: fullName,
       title: "Registered Individual",
       ministry: null,
       role: "employee",
       clearance_level: "self",
       organization_name: null,
-
-      // No migration record yet.
       migration_record_id: null,
-
       active: true,
     })
     .eq("id", userResult.user.id);
@@ -247,14 +296,25 @@ export async function registerIndividual(
     };
   }
 
-  /*
-   * We don't create a migration_record here.
-   * Registration and migration approval are different concepts.
-   *
-   * The person creates their migration application after login.
-   */
+  // Sign in newly-created individual
+  const supabase = await createClient();
 
-  redirect(
-    "/staff-login?registered=individual"
-  );
+  const { error: signInError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+  if (signInError) {
+    console.error(
+      "Individual auto-login failed:",
+      signInError
+    );
+
+    redirect(
+      "/staff-login?registered=individual"
+    );
+  }
+
+  redirect("/employee/dashboard");
 }

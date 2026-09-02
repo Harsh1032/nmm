@@ -24,6 +24,16 @@ const navigation: PortalNavigationItem[] = [
     href: "/employer/workers",
     icon: "workers",
   },
+    {
+    label: "Organization Profile",
+    href: "/employer/profile",
+    icon: "profile",
+  },
+  {
+    label: "Support",
+    href: "/employer/support",
+    icon: "support",
+  },
 ];
 
 export const dynamic = "force-dynamic";

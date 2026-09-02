@@ -14,8 +14,7 @@ export default function NewEmployeeApplicationPage() {
           </h1>
 
           <p className="mt-2 text-sm text-[#667085]">
-            Submit your employment or migration details for
-            Ministry review.
+            Submit your employment or migration details for Ministry review.
           </p>
         </header>
 
@@ -23,9 +22,7 @@ export default function NewEmployeeApplicationPage() {
           action={submitIndividualApplication}
           className="mt-7 rounded-xl border border-[#e2e6eb] bg-white p-6 sm:p-8"
         >
-          <h2 className="text-lg font-bold">
-            Movement Details
-          </h2>
+          <h2 className="text-lg font-bold">Movement Details</h2>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label>
@@ -33,45 +30,40 @@ export default function NewEmployeeApplicationPage() {
                 Movement Direction
               </span>
 
-              <select
-                name="movementDirection"
-                required
-                className="mt-2 h-11 w-full rounded-md border px-3"
-              >
-                <option value="">Select</option>
-                <option value="outbound">
-                  Going abroad for employment
-                </option>
-                <option value="inbound">
-                  Entering the country for employment
-                </option>
-              </select>
+              <label>
+                <span className="text-xs font-bold uppercase text-[#667085]">
+                  Application Type
+                </span>
+
+                <select
+                  name="applicationType"
+                  required
+                  className="mt-2 h-11 w-full rounded-md border border-[#d8dde5] bg-white px-3"
+                >
+                  <option value="">Select</option>
+
+                  <option value="outbound">Going abroad for employment</option>
+
+                  <option value="inbound">
+                    Entering the country for employment
+                  </option>
+
+                  <option value="refugee">
+                    Refugee / Humanitarian Protection
+                  </option>
+                </select>
+              </label>
             </label>
 
-            <Field
-              label="Full Name"
-              name="fullName"
-            />
+            <Field label="Full Name" name="fullName" />
 
-            <Field
-              label="Nationality"
-              name="nationality"
-            />
+            <Field label="Nationality" name="nationality" />
 
-            <Field
-              label="Passport Number"
-              name="passportNumber"
-            />
+            <Field label="Passport Number" name="passportNumber" />
 
-            <Field
-              label="Origin Country"
-              name="originCountry"
-            />
+            <Field label="Origin Country" name="originCountry" />
 
-            <Field
-              label="Destination Country"
-              name="destinationCountry"
-            />
+            <Field label="Destination Country" name="destinationCountry" />
 
             <Field
               label="Destination City"
@@ -79,11 +71,7 @@ export default function NewEmployeeApplicationPage() {
               required={false}
             />
 
-            <Field
-              label="Employer"
-              name="employerName"
-              required={false}
-            />
+            <Field label="Employer" name="employerName" required={false} />
 
             <Field
               label="Position / Job Title"
@@ -91,11 +79,7 @@ export default function NewEmployeeApplicationPage() {
               required={false}
             />
 
-            <Field
-              label="Visa Type"
-              name="visaType"
-              required={false}
-            />
+            <Field label="Visa Type" name="visaType" required={false} />
           </div>
 
           <div className="mt-8 flex justify-end gap-3 border-t pt-6">

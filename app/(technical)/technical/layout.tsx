@@ -10,25 +10,30 @@ const navigation: PortalNavigationItem[] = [
     icon: "dashboard",
   },
   {
-    label: "Data Quality",
-    href: "/technical/data-quality",
-    icon: "database",
+    label: "Applications",
+    href: "/technical/applications",
+    icon: "applications",
   },
   {
-    label: "Integrations",
-    href: "/technical/integrations",
-    icon: "activity",
+    label: "Support Requests",
+    href: "/technical/support",
+    icon: "support",
   },
-  {
-    label: "Audit Logs",
-    href: "/technical/audit",
-    icon: "audit",
-  },
-  {
-    label: "Security",
-    href: "/technical/security",
-    icon: "security",
-  },
+  // {
+  //   label: "Data Quality",
+  //   href: "/technical/data-quality",
+  //   icon: "database",
+  // },
+  // {
+  //   label: "Audit Logs",
+  //   href: "/technical/audit",
+  //   icon: "audit",
+  // },
+  // {
+  //   label: "Security",
+  //   href: "/technical/security",
+  //   icon: "security",
+  // },
 ];
 
 export const dynamic = "force-dynamic";

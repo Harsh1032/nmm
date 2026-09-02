@@ -55,8 +55,8 @@ export default async function EmployerApplicationsPage() {
             href="/employer/applications/new"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#181818] px-5 text-sm font-semibold text-white"
           >
-            <Plus className="h-4 w-4" />
-            Submit Worker
+            <Plus className="h-4 w-4 text-white" />
+            <span className="text-white">Submit Worker</span>
           </Link>
         </header>
 

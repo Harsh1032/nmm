@@ -25,9 +25,29 @@ export async function submitEmployerApplication(
 
   const supabase = await createClient();
 
-  const movementDirection = String(
-    formData.get("movementDirection") ?? ""
+  const applicationType = String(
+    formData.get("applicationType") ?? ""
   );
+
+  if (
+    !["outbound", "inbound", "refugee"].includes(
+      applicationType
+    )
+  ) {
+    throw new Error(
+      "Select a valid application type."
+    );
+  }
+
+  const applicationCategory =
+    applicationType === "refugee"
+      ? "refugee"
+      : "employment";
+
+  const movementDirection: "inbound" | "outbound" | null =
+    applicationType === "refugee"
+      ? null
+      : (applicationType as "inbound" | "outbound");
 
   const fullName = String(
     formData.get("fullName") ?? ""
@@ -65,55 +85,56 @@ export async function submitEmployerApplication(
     !fullName ||
     !nationality ||
     !passportNumber ||
-    !["inbound", "outbound"].includes(
-      movementDirection
-    ) ||
-    !originCountry ||
-    !destinationCountry
+    !originCountry
   ) {
     throw new Error(
       "Required application information is missing."
     );
   }
 
+  if (
+    applicationCategory === "employment" &&
+    !destinationCountry
+  ) {
+    throw new Error(
+      "Destination country is required for employment applications."
+    );
+  }
+
   const { error } = await supabase
     .from("migration_applications")
     .insert({
-      application_number:
-        applicationNumber(),
+      application_number: applicationNumber(),
 
-      submitted_by_user_id:
-        user.id,
+      submitted_by_user_id: user.id,
 
-      employer_id:
-        profile.employer_id,
+      employer_id: profile.employer_id,
 
-      applicant_type:
-        "employer",
+      applicant_type: "employer",
 
-      movement_direction:
-        movementDirection,
+      application_category: applicationCategory,
+
+      movement_direction: movementDirection,
 
       full_name: fullName,
       nationality,
-      passport_number:
-        passportNumber,
+      passport_number: passportNumber,
 
-      origin_country:
-        originCountry,
+      origin_country: originCountry,
 
       destination_country:
-        destinationCountry,
+        destinationCountry || null,
 
       destination_city:
         destinationCity || null,
 
       employer_name:
-        profile.organization_name ||
-        null,
+        profile.organization_name || null,
 
       position_title:
-        positionTitle || null,
+        applicationCategory === "employment"
+          ? positionTitle || null
+          : null,
 
       visa_type:
         visaType || null,
