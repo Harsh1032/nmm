@@ -6,11 +6,16 @@ import type { MigrationRecord } from "@/data/dashboard";
 import { MapPin, MoreVertical } from "lucide-react";
 import Link from "next/link";
 
-const stageStyles = {
-  Approved: "bg-emerald-500",
+const stageStyles: Record<MigrationRecord["stage"], string> = {
+  Submitted: "bg-slate-400",
+
   "Under Review": "bg-blue-500",
-  Flagged: "bg-red-500",
-  Completed: "bg-slate-500",
+
+  "More Information": "bg-amber-500",
+
+  Approved: "bg-emerald-500",
+
+  Rejected: "bg-red-500",
 };
 
 type RecordsTableProps = {
@@ -41,12 +46,10 @@ export default function RecordsTable({
     <section className="overflow-hidden rounded-lg border border-[#edf0f3] bg-white shadow-[0_2px_7px_rgba(16,24,40,0.04)]">
       <div className="flex flex-col justify-between gap-3 border-b border-[#dfe3e8] px-5 py-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="font-bold text-[#202124]">
-            Active Individual Records
-          </h2>
+          <h2 className="font-bold text-[#202124]">Migration Applications</h2>
 
           <p className="mt-1 text-xs text-[#667085]">
-            Real-time status of cross-border workers and refugees.
+            Applications submitted by registered employers and individuals.
           </p>
         </div>
 
@@ -65,8 +68,8 @@ export default function RecordsTable({
 
               <th className="px-4 py-3">Individual &amp; Origin</th>
               <th className="px-4 py-3">Employer Association</th>
+              <th className="px-4 py-3">Application</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Stage</th>
               <th className="px-4 py-3 text-center">Actions</th>
             </tr>
           </thead>
@@ -89,7 +92,7 @@ export default function RecordsTable({
 
                     <div>
                       <Link
-                        href={`/records/${record.id}`}
+                        href={`/applications/${record.id}`}
                         className="text-sm font-bold text-[#202124] hover:underline"
                       >
                         {record.name}
@@ -134,11 +137,10 @@ export default function RecordsTable({
 
                 <td className="px-4 py-5 text-center">
                   <Link
-                    href={`/records/${record.id}`}
-                    aria-label={`Open record for ${record.name}`}
-                    className="inline-flex rounded-md p-2 text-[#667085] hover:bg-[#f2f4f7]"
+                    href={`/applications/${record.id}`}
+                    className="inline-flex items-center rounded-md border border-[#d8dde5] px-3 py-2 text-xs font-semibold text-[#202124] transition hover:bg-[#f5f6f7]"
                   >
-                    <MoreVertical className="h-4 w-4" />
+                    View
                   </Link>
                 </td>
               </tr>

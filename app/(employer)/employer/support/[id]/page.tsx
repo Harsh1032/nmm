@@ -1,15 +1,9 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
-import {
-  Building2,
-  CheckCircle2,
-  Clock3,
-  MessageSquare,
-  Send,
-} from "lucide-react";
+import { Building2, CheckCircle2, Clock3, MessageSquare } from "lucide-react";
 import { notFound } from "next/navigation";
 import { replyToEmployerSupportRequest } from "./actions";
-
+import EmployerSupportReplyForm from "@/components/employer/EmployerSupportReplyForm";
 export const dynamic = "force-dynamic";
 
 export default async function EmployerSupportDetailPage({
@@ -116,74 +110,96 @@ export default async function EmployerSupportDetailPage({
               </div>
             </section>
 
-            <section className="rounded-xl border border-[#e2e6eb] bg-white p-6">
+            <section className="rounded-xl border border-[#e2e6eb] bg-white p-6 shadow-[0_2px_8px_rgba(16,24,40,0.03)]">
               <div className="flex items-center gap-3">
                 <MessageSquare className="h-5 w-5" />
 
-                <h2 className="font-bold">Conversation</h2>
+                <div>
+                  <h2 className="font-bold">Conversation</h2>
+
+                  <p className="mt-1 text-xs text-[#667085]">
+                    Communication history between your organization and the
+                    technical team.
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-6 space-y-4">
-                <div className="max-w-[85%] rounded-lg bg-[#f3f4f6] p-4">
-                  <p className="text-[10px] font-bold uppercase text-[#667085]">
-                    Your Request
-                  </p>
+              <div className="mt-6 space-y-3 rounded-xl bg-[#fbfcfd] p-4">
+                <div className="rounded-xl border border-[#e4e7ec] bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#667085]">
+                      Original Request
+                    </p>
 
-                  <p className="mt-2 text-sm leading-6">
+                    <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-[10px] font-medium text-[#475467]">
+                      Submitted
+                    </span>
+                  </div>
+
+                  <p className="mt-3 text-sm leading-6 text-[#202124]">
                     {incident.description}
                   </p>
                 </div>
 
                 {(messages ?? []).map((message) => {
-                  const isOwnMessage = message.author_user_id === user.id;
-                  user.id;
+                  const isOwnMessage = message.author_role === "employer";
 
                   return (
                     <div
                       key={message.id}
-                      className={
-                        isOwnMessage
-                          ? "ml-auto max-w-[85%] rounded-lg bg-[#181818] p-4 text-white"
-                          : "max-w-[85%] rounded-lg bg-[#eef1f4] p-4 text-[#202124]"
-                      }
+                      className={`flex ${
+                        isOwnMessage ? "justify-end" : "justify-start"
+                      }`}
                     >
-                      <p
-                        className={
+                      <div
+                        className={` w-fit max-w-[78%] rounded-2xl px-4 py-3 shadow-sm ${
                           isOwnMessage
-                            ? "text-[10px] font-bold uppercase text-white/50"
-                            : "text-[10px] font-bold uppercase text-[#667085]"
-                        }
+                            ? "rounded-br-md bg-[#181818] text-white"
+                            : "rounded-bl-md border border-[#e4e7ec] bg-[#f7f8fa] text-[#202124]"
+                        }`}
                       >
-                        {isOwnMessage ? "You" : "Technical Team"}
-                      </p>
+                        <p
+                          className={`text-[10px] font-bold uppercase tracking-[0.08em] ${
+                            isOwnMessage ? "text-white/55" : "text-[#667085]"
+                          }`}
+                        >
+                          {isOwnMessage
+                            ? "You"
+                            : message.author_role === "admin"
+                              ? "Technical Team"
+                              : "Support Team"}
+                        </p>
 
-                      <p className="mt-2 text-sm leading-6">
-                        {message.message}
-                      </p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
+                          {message.message}
+                        </p>
 
-                      <p
-                        className={
-                          isOwnMessage
-                            ? "mt-3 text-[10px] text-white/45"
-                            : "mt-3 text-[10px] text-[#98a0ae]"
-                        }
-                      >
-                        {new Intl.DateTimeFormat("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }).format(new Date(message.created_at))}
-                      </p>
+                        <p
+                          className={`mt-2 text-[10px] ${
+                            isOwnMessage ? "text-white/40" : "text-[#98a2b3]"
+                          }`}
+                        >
+                          {new Intl.DateTimeFormat("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }).format(new Date(message.created_at))}
+                        </p>
+                      </div>
                     </div>
                   );
                 })}
 
                 {!messages?.length && (
-                  <p className="text-sm text-[#667085]">
-                    The technical team has not responded yet.
-                  </p>
+                  <div className="py-8 text-center">
+                    <MessageSquare className="mx-auto h-5 w-5 text-[#98a2b3]" />
+
+                    <p className="mt-3 text-sm text-[#667085]">
+                      The technical team has not responded yet.
+                    </p>
+                  </div>
                 )}
               </div>
             </section>
@@ -191,28 +207,7 @@ export default async function EmployerSupportDetailPage({
 
           <aside className="space-y-5">
             {incident.status !== "resolved" && incident.status !== "closed" && (
-              <form
-                action={replyAction}
-                className="rounded-xl border border-[#e2e6eb] bg-white p-5"
-              >
-                <h2 className="font-bold">Send Follow-Up</h2>
-
-                <textarea
-                  name="message"
-                  rows={5}
-                  required
-                  placeholder="Provide additional information or reply to the technical team..."
-                  className="mt-4 w-full rounded-md border border-[#d8dde5] p-3 text-sm"
-                />
-
-                <button
-                  type="submit"
-                  className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#181818] text-sm font-semibold text-white"
-                >
-                  <Send className="h-4 w-4" />
-                  Send Message
-                </button>
-              </form>
+              <EmployerSupportReplyForm action={replyAction} />
             )}
 
             <section className="rounded-xl border border-[#e2e6eb] bg-white p-5">

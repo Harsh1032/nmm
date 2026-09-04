@@ -4,18 +4,18 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export type EmployerSupportReplyState = {
-  success?: string;
+export type EmployeeSupportReplyState = {
   error?: string;
+  success?: string;
 };
 
-export async function replyToEmployerSupportRequest(
+export async function replyToEmployeeSupportRequest(
   incidentId: string,
-  _previousState: EmployerSupportReplyState,
+  _previousState: EmployeeSupportReplyState,
   formData: FormData
-): Promise<EmployerSupportReplyState> {
+): Promise<EmployeeSupportReplyState> {
   const { user } =
-    await requireRole(["employer"]);
+    await requireRole(["employee"]);
 
   const message = String(
     formData.get("message") ?? ""
@@ -24,16 +24,20 @@ export async function replyToEmployerSupportRequest(
   if (!message) {
     return {
       error:
-        "Enter a message before submitting.",
+        "Enter a message before sending.",
     };
   }
 
   const supabase =
     await createClient();
 
+  /*
+   * Verify that this ticket belongs
+   * to this employee.
+   */
   const {
     data: incident,
-    error: incidentError,
+    error: incidentLookupError,
   } = await supabase
     .from("support_incidents")
     .select(`
@@ -42,19 +46,16 @@ export async function replyToEmployerSupportRequest(
       status
     `)
     .eq("id", incidentId)
-    .eq(
-      "reported_by",
-      user.id
-    )
+    .eq("reported_by", user.id)
     .single();
 
   if (
-    incidentError ||
+    incidentLookupError ||
     !incident
   ) {
     return {
       error:
-        "Support request could not be found.",
+        "Support request not found.",
     };
   }
 
@@ -80,7 +81,7 @@ export async function replyToEmployerSupportRequest(
         user.id,
 
       author_role:
-        "employer",
+        "employee",
 
       message,
 
@@ -90,7 +91,7 @@ export async function replyToEmployerSupportRequest(
 
   if (messageError) {
     console.error(
-      "Employer support reply:",
+      "Employee support reply:",
       messageError
     );
 
@@ -100,6 +101,10 @@ export async function replyToEmployerSupportRequest(
     };
   }
 
+  /*
+   * If technical team was waiting for the user,
+   * employee's reply returns ticket to processing.
+   */
   const {
     error: updateError,
   } = await supabase
@@ -111,26 +116,25 @@ export async function replyToEmployerSupportRequest(
       updated_at:
         new Date().toISOString(),
     })
-    .eq("id", incidentId);
+    .eq("id", incidentId)
+    .eq(
+      "reported_by",
+      user.id
+    );
 
   if (updateError) {
     console.error(
-      "Employer support status:",
+      "Employee support status update:",
       updateError
     );
-
-    return {
-      error:
-        "Your message was sent, but the request status could not be updated.",
-    };
   }
 
   revalidatePath(
-    `/employer/support/${incidentId}`
+    `/employee/support/${incidentId}`
   );
 
   revalidatePath(
-    "/employer/support"
+    "/employee/support"
   );
 
   revalidatePath(
@@ -141,12 +145,8 @@ export async function replyToEmployerSupportRequest(
     "/technical/support"
   );
 
-  revalidatePath(
-    "/technical/dashboard"
-  );
-
   return {
     success:
-      "Message sent successfully. The technical team has been notified.",
+      "Message sent successfully.",
   };
 }

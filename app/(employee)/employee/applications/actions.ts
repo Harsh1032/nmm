@@ -3,7 +3,12 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 import { randomUUID } from "node:crypto";
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+
+export type IndividualApplicationState = {
+  error?: string;
+  success?: string;
+};
 
 function applicationNumber() {
   return `APP-${new Date().getFullYear()}-${randomUUID()
@@ -12,12 +17,39 @@ function applicationNumber() {
 }
 
 export async function submitIndividualApplication(
+  _previousState: IndividualApplicationState,
   formData: FormData
-) {
-  const { user, profile } =
+): Promise<IndividualApplicationState> {
+  const { user } =
     await requireRole(["employee"]);
 
-  const supabase = await createClient();
+  const supabase =
+    await createClient();
+
+  const applicationType = String(
+    formData.get("applicationType") ?? ""
+  );
+
+  if (
+    !["outbound", "inbound", "refugee"].includes(
+      applicationType
+    )
+  ) {
+    return {
+      error:
+        "Select a valid application type.",
+    };
+  }
+
+  const applicationCategory =
+    applicationType === "refugee"
+      ? "refugee"
+      : "employment";
+
+  const movementDirection =
+    applicationType === "refugee"
+      ? null
+      : applicationType;
 
   const fullName = String(
     formData.get("fullName") ?? ""
@@ -30,10 +62,6 @@ export async function submitIndividualApplication(
   const passportNumber = String(
     formData.get("passportNumber") ?? ""
   ).trim();
-
-  const movementDirection = String(
-    formData.get("movementDirection") ?? ""
-  );
 
   const originCountry = String(
     formData.get("originCountry") ?? ""
@@ -63,34 +91,53 @@ export async function submitIndividualApplication(
     !fullName ||
     !nationality ||
     !passportNumber ||
-    !["inbound", "outbound"].includes(
-      movementDirection
-    ) ||
     !originCountry ||
     !destinationCountry
   ) {
-    throw new Error(
-      "Required application fields are missing."
-    );
+    return {
+      error:
+        "Complete all required application fields.",
+    };
   }
+
+  const reference =
+    applicationNumber();
 
   const { error } = await supabase
     .from("migration_applications")
     .insert({
-      application_number: applicationNumber(),
+      application_number:
+        reference,
 
-      applicant_user_id: user.id,
-      submitted_by_user_id: user.id,
+      applicant_user_id:
+        user.id,
 
-      applicant_type: "individual",
-      movement_direction: movementDirection,
+      submitted_by_user_id:
+        user.id,
 
-      full_name: fullName,
+      applicant_type:
+        "individual",
+
+      application_category:
+        applicationCategory,
+
+      movement_direction:
+        movementDirection,
+
+      full_name:
+        fullName,
+
       nationality,
-      passport_number: passportNumber,
 
-      origin_country: originCountry,
-      destination_country: destinationCountry,
+      passport_number:
+        passportNumber,
+
+      origin_country:
+        originCountry,
+
+      destination_country:
+        destinationCountry,
+
       destination_city:
         destinationCity || null,
 
@@ -103,16 +150,47 @@ export async function submitIndividualApplication(
       visa_type:
         visaType || null,
 
-      status: "submitted",
-      submitted_at: new Date().toISOString(),
+      status:
+        "submitted",
+
+      submitted_at:
+        new Date().toISOString(),
     });
 
   if (error) {
-    console.error(error);
-    throw new Error(
-      "Unable to submit application."
+    console.error(
+      "Individual application:",
+      error
     );
+
+    return {
+      error:
+        "Unable to submit your application.",
+    };
   }
 
-  redirect("/employee/applications");
+  revalidatePath(
+    "/employee/dashboard"
+  );
+
+  revalidatePath(
+    "/employee/applications"
+  );
+
+  revalidatePath(
+    "/technical/applications"
+  );
+
+  revalidatePath(
+    "/applications"
+  );
+
+  revalidatePath(
+    "/dashboard"
+  );
+
+  return {
+    success:
+      `Application ${reference} submitted successfully.`,
+  };
 }

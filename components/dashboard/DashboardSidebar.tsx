@@ -21,21 +21,21 @@ const navigation = [
     href: "/dashboard",
     icon: Grid2X2,
   },
-  {
-    label: "Map View",
-    href: "/map",
-    icon: Map,
-  },
-  {
-    label: "Alerts",
-    href: "/alerts",
-    icon: Bell,
-  },
-  {
-    label: "Reports",
-    href: "/reports",
-    icon: FileBarChart,
-  },
+  // {
+  //   label: "Map View",
+  //   href: "/map",
+  //   icon: Map,
+  // },
+  // {
+  //   label: "Alerts",
+  //   href: "/alerts",
+  //   icon: Bell,
+  // },
+  // {
+  //   label: "Reports",
+  //   href: "/reports",
+  //   icon: FileBarChart,
+  // },
   {
     label: "Support",
     href: "/support",

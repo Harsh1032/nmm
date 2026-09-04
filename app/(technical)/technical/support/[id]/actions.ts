@@ -4,11 +4,18 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+export type TechnicalSupportReplyState = {
+  success?: string;
+  error?: string;
+};
+
 export async function replyToSupportRequest(
   incidentId: string,
+  _previousState: TechnicalSupportReplyState,
   formData: FormData
-) {
-  const { user } = await requireRole(["admin"]);
+): Promise<TechnicalSupportReplyState> {
+  const { user } =
+    await requireRole(["admin"]);
 
   const message = String(
     formData.get("message") ?? ""
@@ -19,9 +26,10 @@ export async function replyToSupportRequest(
   );
 
   if (!message) {
-    throw new Error(
-      "Enter a response before submitting."
-    );
+    return {
+      error:
+        "Enter a response before sending.",
+    };
   }
 
   const allowedStatuses = [
@@ -32,19 +40,17 @@ export async function replyToSupportRequest(
   ];
 
   if (!allowedStatuses.includes(status)) {
-    throw new Error(
-      "Invalid support status."
-    );
+    return {
+      error: "Invalid support status.",
+    };
   }
 
-  const supabase = await createClient();
+  const supabase =
+    await createClient();
 
-  /*
-   * Make sure the ticket exists.
-   */
   const {
     data: incident,
-    error: incidentLookupError,
+    error: lookupError,
   } = await supabase
     .from("support_incidents")
     .select(`
@@ -55,61 +61,62 @@ export async function replyToSupportRequest(
     .single();
 
   if (
-    incidentLookupError ||
+    lookupError ||
     !incident
   ) {
     console.error(
-      "Incident lookup error:",
-      incidentLookupError
+      "Support incident lookup error:",
+      lookupError
     );
 
-    throw new Error(
-      "Support request could not be found."
-    );
+    return {
+      error:
+        "Support request could not be found.",
+    };
   }
 
-  /*
-   * Insert technical response.
-   *
-   * IMPORTANT:
-   * Your DB uses author_user_id,
-   * not sender_user_id.
-   */
-const { error: messageError } = await supabase
-  .from("support_messages")
-  .insert({
-    incident_id: incidentId,
-    author_user_id: user.id,
-    author_role: "admin",
-    message,
-    is_internal: false,
-  });
+  const {
+    error: messageError,
+  } = await supabase
+    .from("support_messages")
+    .insert({
+      incident_id:
+        incidentId,
+
+      author_user_id:
+        user.id,
+
+      author_role:
+        "admin",
+
+      message,
+
+      is_internal:
+        false,
+    });
 
   if (messageError) {
     console.error(
-      "TECHNICAL MESSAGE INSERT ERROR:",
-      JSON.stringify(
-        messageError,
-        null,
-        2
-      )
+      "Technical response error:",
+      messageError
     );
 
-    throw new Error(
-      `Unable to send response: ${messageError.message}`
-    );
+    return {
+      error:
+        "The response could not be sent.",
+    };
   }
 
-  /*
-   * Update ticket workflow status.
-   */
   const {
     error: updateError,
   } = await supabase
     .from("support_incidents")
     .update({
       status,
-      assigned_to: user.id,
+
+      assigned_to:
+        user.id,
+
       updated_at:
         new Date().toISOString(),
 
@@ -122,17 +129,14 @@ const { error: messageError } = await supabase
 
   if (updateError) {
     console.error(
-      "SUPPORT STATUS UPDATE ERROR:",
-      JSON.stringify(
-        updateError,
-        null,
-        2
-      )
+      "Support status update:",
+      updateError
     );
 
-    throw new Error(
-      `Response was saved, but ticket status could not be updated: ${updateError.message}`
-    );
+    return {
+      error:
+        "The response was sent, but the request status could not be updated.",
+    };
   }
 
   revalidatePath(
@@ -158,4 +162,15 @@ const { error: messageError } = await supabase
   revalidatePath(
     "/employee/support"
   );
+
+  return {
+    success:
+      status === "waiting_for_user"
+        ? "Response sent. Additional information has been requested."
+        : status === "resolved"
+          ? "Response sent and support request marked as resolved."
+          : status === "closed"
+            ? "Response sent and support request closed."
+            : "Response sent successfully.",
+  };
 }

@@ -6,10 +6,10 @@ export const dynamic = "force-dynamic";
 export default async function ApplicationsPage() {
   const supabase = await createClient();
 
-  const { data: applications } =
-    await supabase
-      .from("migration_applications")
-      .select(`
+  const { data: applications } = await supabase
+    .from("migration_applications")
+    .select(
+      `
         id,
         application_number,
         full_name,
@@ -21,10 +21,11 @@ export default async function ApplicationsPage() {
         employer_name,
         status,
         submitted_at
-      `)
-      .order("submitted_at", {
-        ascending: false,
-      });
+      `,
+    )
+    .order("submitted_at", {
+      ascending: false,
+    });
 
   return (
     <div className="px-4 py-7 sm:px-6 lg:px-8">
@@ -59,64 +60,58 @@ export default async function ApplicationsPage() {
               </thead>
 
               <tbody>
-                {(applications ?? []).map(
-                  (application) => (
-                    <tr
-                      key={application.id}
-                      className="border-b last:border-0"
-                    >
-                      <td className="px-5 py-5 text-xs font-semibold">
-                        {application.application_number}
-                      </td>
+                {(applications ?? []).map((application) => (
+                  <tr key={application.id} className="border-b last:border-0">
+                    <td className="px-5 py-5 text-xs font-semibold">
+                      {application.application_number}
+                    </td>
 
-                      <td className="px-5 py-5">
-                        <p className="text-sm font-bold">
-                          {application.full_name}
-                        </p>
+                    <td className="px-5 py-5">
+                      <p className="text-sm font-bold">
+                        {application.full_name}
+                      </p>
 
-                        <p className="text-[10px] text-[#667085]">
-                          {application.nationality}
-                        </p>
-                      </td>
+                      <p className="text-[10px] text-[#667085]">
+                        {application.nationality}
+                      </p>
+                    </td>
 
-                      <td className="px-5 py-5 text-sm capitalize">
-                        {application.applicant_type ===
-                        "employer"
-                          ? application.employer_name ||
-                            "Employer"
-                          : "Individual"}
-                      </td>
+                    <td className="px-5 py-5 text-sm capitalize">
+                      {application.applicant_type === "employer"
+                        ? application.employer_name || "Employer"
+                        : "Individual"}
+                    </td>
 
-                      <td className="px-5 py-5 text-sm capitalize">
-                        {application.movement_direction}
-                      </td>
+                    <td className="px-5 py-5 text-sm capitalize">
+                      {application.movement_direction}
+                    </td>
 
-                      <td className="px-5 py-5 text-sm">
-                        {application.origin_country}
-                        {" → "}
-                        {application.destination_country}
-                      </td>
+                    <td className="px-5 py-5 text-sm">
+                      {application.origin_country}
+                      {" → "}
+                      {application.destination_country}
+                    </td>
 
-                      <td className="px-5 py-5">
-                        <span className="rounded-full bg-[#f0f1f3] px-3 py-1 text-[10px] capitalize">
-                          {application.status.replaceAll(
-                            "_",
-                            " "
-                          )}
-                        </span>
-                      </td>
+                    <td className="px-5 py-5">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold capitalize ${getApplicationStatusStyle(
+                          application.status,
+                        )}`}
+                      >
+                        {formatApplicationStatus(application.status)}
+                      </span>
+                    </td>
 
-                      <td className="px-5 py-5">
-                        <Link
-                          href={`/applications/${application.id}`}
-                          className="text-xs font-semibold hover:underline"
-                        >
-                          Review
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                )}
+                    <td className="px-5 py-5">
+                      <Link
+                        href={`/applications/${application.application_number}`}
+                        className="text-xs font-semibold hover:underline"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -124,4 +119,51 @@ export default async function ApplicationsPage() {
       </div>
     </div>
   );
+}
+
+
+function getApplicationStatusStyle(status: string) {
+  switch (status) {
+    case "approved":
+      return "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200";
+
+    case "rejected":
+      return "bg-red-50 text-red-700 ring-1 ring-inset ring-red-200";
+
+    case "under_review":
+    case "in_review":
+      return "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200";
+
+    case "more_information_required":
+    case "needs_information":
+      return "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200";
+
+    case "submitted":
+    default:
+      return "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200";
+  }
+}
+
+function formatApplicationStatus(status: string) {
+  switch (status) {
+    case "under_review":
+    case "in_review":
+      return "Under Review";
+
+    case "more_information_required":
+    case "needs_information":
+      return "More Information";
+
+    case "approved":
+      return "Approved";
+
+    case "rejected":
+      return "Rejected";
+
+    case "submitted":
+      return "Submitted";
+
+    default:
+      return status.replaceAll("_", " ");
+  }
 }

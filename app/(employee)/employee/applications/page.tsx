@@ -57,8 +57,8 @@ export default async function EmployeeApplicationsPage() {
             href="/employee/applications/new"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#181818] px-5 text-sm font-semibold text-white transition hover:bg-black"
           >
-            <Plus className="h-4 w-4" />
-            New Application
+            <Plus className="h-4 w-4 text-white"/>
+            <span className="text-white">New Application</span>
           </Link>
         </header>
 
@@ -169,7 +169,7 @@ export default async function EmployeeApplicationsPage() {
                 href="/employee/applications/new"
                 className="mt-5 inline-flex h-10 items-center gap-2 rounded-md bg-[#181818] px-5 text-sm font-semibold text-white"
               >
-                Start First Application
+                <span className="text-white">Start First Application</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

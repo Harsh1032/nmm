@@ -1,11 +1,8 @@
 import EmployeeSupportForm from "@/components/employee/EmployeeSupportForm";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
-import {
-  HeartHandshake,
-  LifeBuoy,
-  ShieldCheck,
-} from "lucide-react";
+import { HeartHandshake, LifeBuoy, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -16,14 +13,16 @@ export default async function EmployeeSupportPage() {
 
   const { data: requests } = await supabase
     .from("support_incidents")
-    .select(`
+    .select(
+      `
       id,
       reference_number,
       category,
       severity,
       status,
       created_at
-    `)
+    `,
+    )
     .eq("reported_by", user.id)
     .order("created_at", {
       ascending: false,
@@ -38,13 +37,10 @@ export default async function EmployeeSupportPage() {
             Assistance Services
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold">
-            Support & Assistance
-          </h1>
+          <h1 className="mt-2 text-3xl font-bold">Support & Assistance</h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#667085]">
-            Request medical, legal, employment, shelter or emergency
-            assistance.
+            Request medical, legal, employment, shelter or emergency assistance.
           </p>
         </header>
 
@@ -53,9 +49,7 @@ export default async function EmployeeSupportPage() {
             <div className="flex items-center gap-3">
               <HeartHandshake className="h-5 w-5" />
 
-              <h2 className="font-bold">
-                Request Assistance
-              </h2>
+              <h2 className="font-bold">Request Assistance</h2>
             </div>
 
             <div className="mt-6">
@@ -67,30 +61,37 @@ export default async function EmployeeSupportPage() {
             <section className="rounded-xl border border-[#e2e6eb] bg-white p-5">
               <LifeBuoy className="h-5 w-5" />
 
-              <h2 className="mt-4 font-bold">
-                Recent Requests
-              </h2>
+              <h2 className="mt-4 font-bold">Recent Requests</h2>
 
               <div className="mt-4 space-y-3">
                 {(requests ?? []).map((request) => (
-                  <div
+                  <Link
                     key={request.id}
-                    className="rounded-lg border border-[#edf0f3] p-4"
+                    href={`/employee/support/${request.id}`}
+                    className="block rounded-lg border border-[#edf0f3] p-4 transition hover:border-[#cfd4dc] hover:bg-[#fafbfc]"
                   >
-                    <div className="flex justify-between gap-3">
-                      <span className="text-xs font-bold">
-                        {request.reference_number}
-                      </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold">
+                          {request.reference_number}
+                        </p>
 
-                      <span className="text-[10px] capitalize text-[#667085]">
-                        {request.status.replaceAll("_", " ")}
-                      </span>
+                        <p className="mt-2 text-sm font-semibold capitalize">
+                          {request.category}
+                        </p>
+
+                        <p className="mt-1 text-[10px] capitalize text-[#667085]">
+                          Priority: {request.severity}
+                        </p>
+                      </div>
+
+                      <StatusBadge status={request.status} />
                     </div>
 
-                    <p className="mt-2 text-sm capitalize">
-                      {request.category}
+                    <p className="mt-3 text-[10px] font-semibold text-[#202124]">
+                      View Request →
                     </p>
-                  </div>
+                  </Link>
                 ))}
 
                 {!requests?.length && (
@@ -104,9 +105,7 @@ export default async function EmployeeSupportPage() {
             <section className="rounded-xl bg-[#181818] p-5 text-white">
               <ShieldCheck className="h-5 w-5" />
 
-              <h2 className="mt-4 font-bold">
-                Emergency Assistance
-              </h2>
+              <h2 className="mt-4 font-bold">Emergency Assistance</h2>
 
               <p className="mt-2 text-sm leading-6 text-white/65">
                 For immediate threats to health or safety, use the emergency
@@ -117,5 +116,24 @@ export default async function EmployeeSupportPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles =
+    status === "resolved" || status === "closed"
+      ? "bg-emerald-50 text-emerald-700"
+      : status === "waiting_for_user"
+        ? "bg-amber-50 text-amber-700"
+        : status === "in_progress"
+          ? "bg-blue-50 text-blue-700"
+          : "bg-slate-100 text-slate-700";
+
+  return (
+    <span
+      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${styles}`}
+    >
+      {status.replaceAll("_", " ")}
+    </span>
   );
 }

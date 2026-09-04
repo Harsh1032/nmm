@@ -64,10 +64,7 @@ export async function submitEmployerSupportRequest(
     .insert({
       reference_number: reference,
       reported_by: user.id,
-
-      employer_id:
-        profile.employer_id,
-
+      employer_id: profile.employer_id,
       category,
       description,
       severity,
@@ -75,7 +72,10 @@ export async function submitEmployerSupportRequest(
     });
 
   if (error) {
-    console.error(error);
+    console.error(
+      "Employer support request error:",
+      error
+    );
 
     return {
       error:
@@ -83,12 +83,11 @@ export async function submitEmployerSupportRequest(
     };
   }
 
-  revalidatePath(
-    "/employer/support"
-  );
+  revalidatePath("/employer/support");
+  revalidatePath("/technical/support");
+  revalidatePath("/technical/dashboard");
 
   return {
-    success:
-      `Support request ${reference} submitted successfully.`,
+    success: `Support request ${reference} submitted successfully.`,
   };
 }

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { replyToSupportRequest } from "./actions";
+import TechnicalSupportReplyForm from "@/components/technical/TechnicalSupportReplyForm";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,8 @@ export default async function TechnicalSupportDetailPage({
 
   const { data: incident } = await supabase
     .from("support_incidents")
-    .select(`
+    .select(
+      `
       id,
       reference_number,
       reported_by,
@@ -37,7 +39,8 @@ export default async function TechnicalSupportDetailPage({
       created_at,
       updated_at,
       resolved_at
-    `)
+    `,
+    )
     .eq("id", id)
     .single();
 
@@ -47,24 +50,22 @@ export default async function TechnicalSupportDetailPage({
 
   const { data: messages } = await supabase
     .from("support_messages")
-    .select(`
+    .select(
+      `
       id,
   author_user_id,
   author_role,
       message,
       is_internal,
       created_at
-    `)
+    `,
+    )
     .eq("incident_id", incident.id)
     .order("created_at", {
       ascending: true,
     });
 
-  const replyAction =
-    replyToSupportRequest.bind(
-      null,
-      incident.id
-    );
+  const replyAction = replyToSupportRequest.bind(null, incident.id);
 
   return (
     <div className="px-4 py-7 sm:px-6 lg:px-8">
@@ -89,36 +90,23 @@ export default async function TechnicalSupportDetailPage({
               <div className="flex items-center gap-3">
                 <LifeBuoy className="h-5 w-5" />
 
-                <h2 className="font-bold">
-                  Request Details
-                </h2>
+                <h2 className="font-bold">Request Details</h2>
               </div>
 
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                <Detail
-                  label="Category"
-                  value={incident.category}
-                />
+                <Detail label="Category" value={incident.category} />
 
-                <Detail
-                  label="Priority"
-                  value={incident.severity}
-                />
+                <Detail label="Priority" value={incident.severity} />
 
                 <Detail
                   label="Status"
-                  value={incident.status.replaceAll(
-                    "_",
-                    " "
-                  )}
+                  value={incident.status.replaceAll("_", " ")}
                 />
 
                 <Detail
                   label="Submitted By"
                   value={
-                    incident.employer_id
-                      ? "Registered Employer"
-                      : "Individual"
+                    incident.employer_id ? "Registered Employer" : "Individual"
                   }
                 />
               </div>
@@ -134,131 +122,106 @@ export default async function TechnicalSupportDetailPage({
               </div>
             </section>
 
-            <section className="rounded-xl border bg-white p-6">
+            <section className="rounded-xl border border-[#e2e6eb] bg-white p-6 shadow-[0_2px_8px_rgba(16,24,40,0.03)]">
               <div className="flex items-center gap-3">
                 <MessageSquare className="h-5 w-5" />
 
-                <h2 className="font-bold">
-                  Conversation
-                </h2>
+                <div>
+                  <h2 className="font-bold">Conversation</h2>
+
+                  <p className="mt-1 text-xs text-[#667085]">
+                    Communication history for this support request.
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-6 space-y-4">
-                <div className="max-w-[85%] rounded-lg bg-[#f3f4f6] p-4">
-                  <p className="text-[10px] font-bold uppercase text-[#667085]">
-                    Original Request
-                  </p>
+              <div className="mt-6 space-y-3 rounded-xl bg-[#fbfcfd] p-4">
+                <div className="rounded-xl border border-[#e4e7ec] bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#667085]">
+                      Original Request
+                    </p>
 
-                  <p className="mt-2 text-sm leading-6">
+                    <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-[10px] font-medium text-[#475467]">
+                      Submitted
+                    </span>
+                  </div>
+
+                  <p className="mt-3 text-sm leading-6 text-[#202124]">
                     {incident.description}
                   </p>
                 </div>
 
-                {(messages ?? []).map(
-                  (message) => (
+                {(messages ?? []).map((message) => {
+                  const isTechnical = message.author_role === "admin";
+
+                  const senderLabel = isTechnical
+                    ? "Technical Team"
+                    : message.author_role === "employer"
+                      ? "Employer"
+                      : "Individual";
+
+                  return (
                     <div
                       key={message.id}
-                      className="ml-auto max-w-[85%] rounded-lg bg-[#181818] p-4 text-white"
+                      className={`flex ${
+                        isTechnical ? "justify-end" : "justify-start"
+                      }`}
                     >
-                      <p className="text-[10px] font-bold uppercase text-white/50">
-                        Technical Team
-                      </p>
+                      <div
+                        className={`w-fit max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
+                          isTechnical
+                            ? "rounded-br-md bg-[#181818] text-white"
+                            : "rounded-bl-md border border-[#e4e7ec] bg-[#f4f6f8] text-[#202124]"
+                        }`}
+                      >
+                        <p
+                          className={`text-[10px] font-bold uppercase tracking-[0.08em] ${
+                            isTechnical ? "text-white/55" : "text-[#667085]"
+                          }`}
+                        >
+                          {senderLabel}
+                        </p>
 
-                      <p className="mt-2 text-sm leading-6">
-                        {message.message}
-                      </p>
+                        <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6">
+                          {message.message}
+                        </p>
 
-                      <p className="mt-3 text-[10px] text-white/45">
-                        {new Intl.DateTimeFormat(
-                          "en-GB",
-                          {
+                        <p
+                          className={`mt-2 text-[10px] ${
+                            isTechnical ? "text-white/40" : "text-[#98a2b3]"
+                          }`}
+                        >
+                          {new Intl.DateTimeFormat("en-GB", {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
-                        ).format(
-                          new Date(
-                            message.created_at
-                          )
-                        )}
-                      </p>
+                          }).format(new Date(message.created_at))}
+                        </p>
+                      </div>
                     </div>
-                  )
-                )}
-
+                  );
+                })}
                 {!messages?.length && (
-                  <p className="text-sm text-[#667085]">
-                    No responses have been sent yet.
-                  </p>
+                  <div className="py-8 text-center">
+                    <MessageSquare className="mx-auto h-5 w-5 text-[#98a2b3]" />
+
+                    <p className="mt-3 text-sm text-[#667085]">
+                      No responses have been sent yet.
+                    </p>
+                  </div>
                 )}
               </div>
             </section>
           </div>
 
           <aside>
-            <form
+            <TechnicalSupportReplyForm
               action={replyAction}
-              className="rounded-xl border bg-white p-6"
-            >
-              <h2 className="font-bold">
-                Respond to Request
-              </h2>
-
-              <label className="mt-5 block">
-                <span className="text-xs font-bold uppercase text-[#667085]">
-                  Response
-                </span>
-
-                <textarea
-                  name="message"
-                  rows={6}
-                  required
-                  placeholder="Write a response to the user..."
-                  className="mt-2 w-full rounded-md border border-[#d8dde5] p-3 text-sm"
-                />
-              </label>
-
-              <label className="mt-5 block">
-                <span className="text-xs font-bold uppercase text-[#667085]">
-                  Update Status
-                </span>
-
-                <select
-                  name="status"
-                  defaultValue={
-                    incident.status === "open"
-                      ? "in_progress"
-                      : incident.status
-                  }
-                  className="mt-2 h-11 w-full rounded-md border border-[#d8dde5] bg-white px-3 text-sm"
-                >
-                  <option value="in_progress">
-                    In Progress
-                  </option>
-
-                  <option value="waiting_for_user">
-                    Waiting for User
-                  </option>
-
-                  <option value="resolved">
-                    Resolved
-                  </option>
-
-                  <option value="closed">
-                    Closed
-                  </option>
-                </select>
-              </label>
-
-              <button
-                type="submit"
-                className="mt-6 h-11 w-full rounded-md bg-[#181818] text-sm font-semibold text-white"
-              >
-                Send Response
-              </button>
-            </form>
+              currentStatus={incident.status}
+            />
 
             <section className="mt-5 rounded-xl border bg-white p-5">
               <p className="text-xs font-bold uppercase text-[#667085]">
@@ -292,22 +255,12 @@ export default async function TechnicalSupportDetailPage({
   );
 }
 
-function Detail({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase text-[#667085]">
-        {label}
-      </p>
+      <p className="text-[10px] font-bold uppercase text-[#667085]">{label}</p>
 
-      <p className="mt-2 text-sm font-semibold capitalize">
-        {value}
-      </p>
+      <p className="mt-2 text-sm font-semibold capitalize">{value}</p>
     </div>
   );
 }
@@ -326,13 +279,9 @@ function StatusInfo({
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
 
       <div>
-        <p className="text-xs font-bold">
-          {label}
-        </p>
+        <p className="text-xs font-bold">{label}</p>
 
-        <p className="mt-1 text-[11px] leading-5 text-[#667085]">
-          {text}
-        </p>
+        <p className="mt-1 text-[11px] leading-5 text-[#667085]">{text}</p>
       </div>
     </div>
   );
