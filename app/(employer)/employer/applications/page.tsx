@@ -1,22 +1,19 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
-import {
-  ArrowRight,
-  Plus,
-} from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function EmployerApplicationsPage() {
-  const { profile } =
-    await requireRole(["employer"]);
+  const { profile } = await requireRole(["employer"]);
 
   const supabase = await createClient();
 
   const { data: applications } = await supabase
     .from("migration_applications")
-    .select(`
+    .select(
+      `
       id,
       application_number,
       full_name,
@@ -27,7 +24,8 @@ export default async function EmployerApplicationsPage() {
       position_title,
       status,
       submitted_at
-    `)
+    `,
+    )
     .eq("employer_id", profile.employer_id)
     .order("created_at", {
       ascending: false,
@@ -108,26 +106,24 @@ export default async function EmployerApplicationsPage() {
                     </td>
 
                     <td className="px-5 py-5">
-                      <span className="rounded-full bg-[#f0f1f3] px-3 py-1 text-[10px] font-medium capitalize">
-                        {formatStatus(application.status)}
-                      </span>
-                    </td>
+  <StatusBadge status={application.status} />
+</td>
 
                     <td className="px-5 py-5">
-                      <button className="inline-flex items-center gap-1 text-xs font-semibold">
+                      <Link
+                        href={`/employer/workers/${application.id}`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold transition hover:underline"
+                      >
                         View
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
+                        {/* <ArrowRight className="h-3.5 w-3.5" /> */}
+                      </Link>
                     </td>
                   </tr>
                 ))}
 
                 {!applications?.length && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="px-5 py-16 text-center"
-                    >
+                    <td colSpan={7} className="px-5 py-16 text-center">
                       <p className="font-semibold">
                         No worker applications yet
                       </p>
@@ -150,8 +146,51 @@ export default async function EmployerApplicationsPage() {
   );
 }
 
-function formatStatus(value: string) {
+function StatusBadge({
+  status,
+}: {
+  status: string;
+}) {
+  const styles: Record<string, string> = {
+    draft:
+      "bg-slate-100 text-slate-700",
+
+    submitted:
+      "bg-blue-50 text-blue-700",
+
+    under_review:
+      "bg-amber-50 text-amber-700",
+
+    more_information_required:
+      "bg-orange-50 text-orange-700",
+
+    approved:
+      "bg-emerald-50 text-emerald-700",
+
+    rejected:
+      "bg-red-50 text-red-700",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-[10px] font-semibold ${
+        styles[status] ??
+        "bg-[#f0f1f3] text-[#475467]"
+      }`}
+    >
+      {formatStatus(status)}
+    </span>
+  );
+}
+
+function formatStatus(
+  value: string
+) {
   return value
     .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    .replace(
+      /\b\w/g,
+      (letter) =>
+        letter.toUpperCase()
+    );
 }
