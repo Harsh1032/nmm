@@ -174,11 +174,11 @@ export default async function EmployerWorkersPage() {
 
                       <td className="px-5 py-5">
                         <Link
-                          href={`/employer/applications/${worker.id}`}
+                          href={`/employer/workers/${worker.id}`}
                           className="inline-flex items-center gap-1 text-xs font-semibold"
                         >
                           View
-                          <ArrowRight className="h-3.5 w-3.5" />
+                          {/* <ArrowRight className="h-3.5 w-3.5" /> */}
                         </Link>
                       </td>
                     </tr>
