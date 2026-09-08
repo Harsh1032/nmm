@@ -26,7 +26,7 @@ const stakeholders: Stakeholder[] = [
     category: "Government",
     description:
       "Policy oversight, nationwide labor statistics and employer compliance monitoring.",
-    href: "/portals/ministry-of-labour",
+    href: "/staff-login",
     icon: Building2,
   },
   {
@@ -34,7 +34,7 @@ const stakeholders: Stakeholder[] = [
     category: "International",
     description:
       "Refugee assistance coordination, vulnerability assessments and protection tracking.",
-    href: "/portals/un-agencies",
+    href: "/staff-login",
     icon: Globe2,
   },
   {
@@ -42,31 +42,31 @@ const stakeholders: Stakeholder[] = [
     category: "Support",
     description:
       "Service delivery logging, health support records and shelter allocation management.",
-    href: "/portals/ngo-partners",
+    href: "/staff-login",
     icon: Users,
   },
   {
-    title: "National Police",
+    title: "Police",
     category: "Security",
     description:
-      "Incident response coordination, border check verifications and urgent alert management.",
-    href: "/portals/national-police",
+      "Identity verification & enforcement",
+    href: "/staff-login",
     icon: ShieldAlert,
   },
   {
-    title: "Authorized Employers",
+    title: "Employer",
     category: "Industry",
     description:
-      "Worker visa verification, contract reporting and labor standard compliance.",
-    href: "/portals/employers",
+      "Migrant worker management & reporting",
+    href: "/staff-login",
     icon: BriefcaseBusiness,
   },
   {
-    title: "Public Services",
+    title: "Employee / Individual",
     category: "Citizen",
     description:
-      "Self-registration tools, community reporting and rights information portal.",
-    href: "/public-services",
+      "Personal migration, employment & support services",
+    href: "/staff-login",
     icon: CircleUserRound,
   },
 ];
