@@ -31,6 +31,13 @@ export default function Navbar() {
           </button>
 
           <Link
+            href="/jobs"
+            className="inline-flex h-11 items-center justify-center rounded-md border border-[#d8dde5] bg-white px-5 text-sm font-semibold"
+          >
+            Apply for Jobs
+          </Link>
+
+          <Link
             href="/public-support"
             className="text-sm font-medium text-[#252525] hover:text-black"
           >
